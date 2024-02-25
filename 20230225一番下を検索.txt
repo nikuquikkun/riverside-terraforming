@@ -1,0 +1,22 @@
+Sub 一番下を検索()
+    Dim ws1 As Worksheet
+    Dim ws2 As Worksheet
+    Dim i As Long
+    Dim yend As Long
+    Dim Maxnoatai As Long
+    
+    Set ws1 = Worksheets("作業シート")
+    Set ws2 = Worksheets("アウトプット")
+    
+    Maxnoatai = 0
+    yend = ws1.Cells(1, Columns.Count).End(xlToLeft).Columns
+    
+    For i = 1 To yend
+        ws2.Cells(1, i).Value = ws1.Cells(Rows.Count, i).End(xlUp).Row
+        If (Maxnoatai < ws2.Cells(1, i).Value) Then
+            Maxnoatai = ws2.Cells(1, i).Value
+        Else
+        End If
+        ws2.Cells(3, i).Value = Maxnoatai
+    Next i
+End Sub
