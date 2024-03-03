@@ -1,0 +1,69 @@
+'--------------------------------------------------------
+'Seleniumを使ってVBAからchrome情報を取得
+'　※Seleniumがインストールされていない場合はインストール
+'    ①chromeの画面ｻｲｽﾞを指定
+'    ②取込み先のエクセルのタイトル行設定
+'    ③格納先B列の最終行取得
+'    ④chromeを起動
+'    ⑤B1ｾﾙの情報でｻｲﾄを開く
+'    ⑥少し待ち
+'    ⑦格納先A列～E列入力
+'    　.FindElementByXPathを使い、Xのフォロー数、フォロワー数を取得
+'    ⑧文字色変更
+'    ⑨chromeを閉じる
+'    ⑩ﾃﾞｰﾀ開放
+'--------------------------------------------------------
+Sub XkaraDataIN()
+
+    Dim driver As New Selenium.WebDriver
+    Dim EndnoRow As Long
+    '①画面サイズ指定
+    driver.AddArgument "window-size=500,500"
+    '②タイトル行設定
+    Range("A2") = "No."
+    Range("B2") = "取得時刻"
+    Range("C2") = "フォロー中"
+    Range("D2") = "フォロワー"
+    Range("E2") = "増減"
+    '③格納先B列の最終行取得
+    EndnoRow = Cells(Rows.Count, 2).End(xlUp).Row + 1
+    '④chromeを起動
+    driver.Start "chrome"
+    '⑤B1ｾﾙの情報でｻｲﾄを開く
+    driver.Get Range("B1")
+    '⑥少し待ち
+    driver.Wait 6000
+    '⑦-1格納先A列へ一貫Noをつける
+    Cells(EndnoRow, 1).Value = EndnoRow - 2
+    '⑦-2格納先B列へタイムスタンプをつける
+    Cells(EndnoRow, 2).Value = Now
+    '⑦-3格納先C列へﾌｫﾛｰ中の情報を入れる
+    Cells(EndnoRow, 3).Value = _
+        driver.FindElementByXPath("//span[contains(text(),""フォロー中"")]/../../span[1]/span").Text
+    '⑦-4格納先D列へﾌｫﾛｰﾜｰの情報を入れる
+    Cells(EndnoRow, 4).Value = _
+        driver.FindElementByXPath("//span[contains(text(),""フォロワー"")]/../../span[1]/span").Text
+    '⑦-5格納先E列へ増減を入れる
+    If (Cells(EndnoRow, 1).Value <> 1) Then
+        Cells(EndnoRow, 5).Value = _
+            Cells(EndnoRow, 4).Value - Cells(EndnoRow - 1, 4).Value & "人増加"
+    Else
+    End If
+    '⑧-1前回ﾃﾞｰﾀで格納先A-E列の文字色を黒へ変更
+    Range(Cells(EndnoRow - 1, 1), Cells(EndnoRow - 1, 5)).Select
+    With Selection.Font
+        .ColorIndex = xlAutomatic
+        .TintAndShade = 0
+    End With
+    '⑧-2今回ﾃﾞｰﾀで格納先A-E列の文字色を赤へ変更
+    Range(Cells(EndnoRow, 1), Cells(EndnoRow, 5)).Select
+    With Selection.Font
+        .Color = -16776961
+        .TintAndShade = 0
+    End With
+    '⑨ｸﾛｰﾑを閉じる
+    driver.Close
+    '⑩ﾃﾞｰﾀ開放
+    Set driver = Nothing
+    
+End Sub
