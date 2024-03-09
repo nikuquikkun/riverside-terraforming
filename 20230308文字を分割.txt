@@ -1,0 +1,31 @@
+'--------------------------------------------------------
+'Splitを使いデータを分割
+'Parts = Split(Data, " ")なら空白、
+'Parts = Split(Data, ",")なら「,」
+'要素は0からはじまるので注意
+'--------------------------------------------------------
+
+Sub Splitarr()
+
+    Dim Data As Variant
+    Dim Parts As Variant
+    
+    'データは空白区切り
+    Data = "a　b c"
+    
+    'データを半角へ変換
+    Data = StrConv(Data, vbNarrow)
+    
+    '空白区切りで要素分け
+    Parts = Split(Data, " ")
+    
+    '要素のミニマム値
+    Debug.Print LBound(Parts)
+    
+    '要素のマックス値
+    Debug.Print UBound(Parts)
+    
+    '2番目の要素(0､1､2)
+    Debug.Print Parts(2)
+    
+End Sub
