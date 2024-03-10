@@ -1,0 +1,76 @@
+'--------------------------------------------------------
+'Seleniumを使ってVBAからchrome情報を取得
+'　※Seleniumがインストールされていない場合はインストール
+'    ①chromeの画面ｻｲｽﾞを指定
+'    ②取込み先のエクセルのタイトル行設定
+'    ③格納先B列の最終行取得
+'    ④chromeを起動
+'    ⑤B1ｾﾙの情報でｻｲﾄを開く、少し待ち
+'    ⑥カテゴリ１から９を対象
+'    ⑦一貫とﾀｲﾑｽﾀﾝﾌﾟ
+'    ⑧カテゴリをクリックして変更
+'    ⑨カテゴリと更新日を取得、カテゴリ内の４記事とリンク先を取得
+'    ⑩chromeを閉じる、ﾃﾞｰﾀ開放
+'--------------------------------------------------------
+    Dim driver As New Selenium.WebDriver
+    Dim EndnoRow As Long
+    Dim i1 As Byte
+    Dim i2 As Byte
+    Dim URL As String
+    Dim txt As String
+    Dim Path1 As String
+    Dim Path2 As String
+Sub XkaraDataIN()
+    '①画面サイズ指定
+    driver.AddArgument "window-size=500,500"
+    '②タイトル行設定
+    Range("A2") = "No."
+    Range("B2") = "取得時刻"
+    Range("C2") = "L1"
+    Range("D2") = "L2"
+    Range("E2") = "L3"
+    Range("F2") = "L4"
+    '③格納先B列の最終行取得
+    EndnoRow = Cells(Rows.Count, 2).End(xlUp).Row + 1
+    '④chromeを起動
+    driver.Start "chrome"
+    '⑤-1B1ｾﾙの情報でｻｲﾄを開く
+    driver.Get Range("B1")
+    '⑤-2少し待ち
+    driver.Wait 500
+    '⑥カテゴリ1から9を対象
+    For i2 = 1 To 9
+        '⑦-1格納先A列へ一貫Noをつける
+        Cells(EndnoRow, 1).Value = EndnoRow - 2
+        '⑦-2格納先B列へタイムスタンプをつける
+        Cells(EndnoRow, 2).Value = Now
+        '⑧カテゴリ変更､2以降でクリックページ変更
+        If (i2 <> 1) Then
+            driver.FindElementByXPath("//*[@id=""tabTopics" & i2 & """]/a").Click
+        Else
+        End If
+        '⑨-1C列にカテゴリと更新日を取得
+        Cells(EndnoRow, 3) = i2 & driver.FindElementByXPath("//*[@id=""tabTopics" & i2 & """]/a").Text & _
+            driver.FindElementByXPath("//*[@id=""tabpanelTopics" & i2 & """]/div/div[1]/p/span").Text
+        '⑨-2カテゴリ内の1から4を取得
+        For i1 = 1 To 4
+            '対象のﾃｷｽﾄを取得
+            Path1 = "//*[@id=""tabpanelTopics" & i2 & """]/div/div[1]/ul/li[" & i1 & "]/article/a/div/div/h1/span"
+            txt = driver.FindElementByXPath(Path1).Text
+            '対象のﾘﾝｸ先を取得
+            Path2 = "//*[@id=""tabpanelTopics" & i2 & """]/div/div[1]/ul/li[" & i1 & "]/article/a"
+            URL = driver.FindElementByXPath(Path2).Attribute("href")
+            'ﾊｲﾊﾟｰﾘﾝｸで設定
+            ActiveSheet.Hyperlinks.Add Anchor:= _
+                Cells(EndnoRow, 3 + i1), Address:=URL, TextToDisplay:=txt, ScreenTip:="ハイパーリンクですよ"
+        Next i1
+        '行を変更
+        EndnoRow = EndnoRow + 1
+    Next i2
+    '⑩-1ｸﾛｰﾑを閉じる
+    driver.Close
+    '⑩-2ﾃﾞｰﾀ開放
+    Set driver = Nothing
+    MsgBox "終了"
+    
+End Sub
